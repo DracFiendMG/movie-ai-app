@@ -3,6 +3,7 @@ html, body {
     padding: 0;
     background-color: #000C36;
     font-family: "Roboto Slab", serif;
+    color: #FFFFFF;
 }
 
 header {
@@ -29,8 +30,25 @@ main {
 .question {
     display: flex;
     flex-direction: column;
-    color: #FFFFFF;
     gap: 0.5em;
+}
+
+#answers {
+    display: flex;
+    flex-direction: column;
+    gap: 4em;
+}
+
+#movie {
+    color: inherit;
+}
+
+#title {
+    font-size: 1.875em;
+}
+
+#description {
+    font-size: 1.125em;
 }
 
 textarea {
@@ -38,10 +56,28 @@ textarea {
     resize: none;
     background-color: #3B4877;
     border: none;
+    border-radius: 10px;
     min-height: 64px;
     font-size: 0.875em;
     font-family: inherit;
     color: inherit;
     padding: 0.857em;
     box-sizing: border-box;
+}
+
+textarea:active,
+textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #51E08A;
+}
+
+button {
+    font-size: 1.875em;
+    font-family: inherit;
+    font-weight: 700;
+    color: #000C36;
+    background-color: #51E08A;
+    border: none;
+    border-radius: 10px;
+    padding: 0.5em;
 }

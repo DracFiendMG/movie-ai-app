@@ -1,4 +1,47 @@
 html, body {
     margin: 0;
     padding: 0;
+    background-color: #000C36;
+    font-family: "Roboto Slab", serif;
+}
+
+header {
+    display: flex;
+    justify-content: center;
+    margin: 3.125em 5em;
+}
+
+header img {
+    flex: 1;
+    max-width: 235px;
+}
+
+main {
+    margin: 0 2em 2em;
+}
+
+#movie-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2.25em;
+}
+
+.question {
+    display: flex;
+    flex-direction: column;
+    color: #FFFFFF;
+    gap: 0.5em;
+}
+
+textarea {
+    field-sizing: content;
+    resize: none;
+    background-color: #3B4877;
+    border: none;
+    min-height: 64px;
+    font-size: 0.875em;
+    font-family: inherit;
+    color: inherit;
+    padding: 0.857em;
+    box-sizing: border-box;
 }

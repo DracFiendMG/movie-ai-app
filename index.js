@@ -1,4 +1,4 @@
-// import { openai, supabase } from './config.js';
+import { getEmbedding, supabase } from './config.js';
 
 const main = document.querySelector('main')
 

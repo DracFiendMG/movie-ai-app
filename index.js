@@ -1,4 +1,6 @@
 import { getEmbedding, supabase } from './config.js';
+import content from './content.js';
+import movies from './content.js'
 
 const main = document.querySelector('main')
 
@@ -23,5 +25,21 @@ function renderMain() {
         </section>
     `
 }
+
+async function createAndStoreEmbeddings() {
+    const movieContentList = movies.map((movie) => movie.content)
+    const embeddingResponse = await getEmbedding(movieContentList)
+    console.log(embeddingResponse)
+    const data = embeddingResponse.map((embedding, index) => {
+        return {
+            content: movieContentList[index],
+            embedding: embedding
+        }
+    })
+
+    await supabase.from('movies').insert(data)
+}
+
+// createAndStoreEmbeddings()
 
 // renderMain()

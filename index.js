@@ -1,8 +1,64 @@
-import { getEmbedding, supabase } from './config.js';
+import { getEmbedding, chatCompletions, supabase } from './config.js';
 import content from './content.js';
 import movies from './content.js'
 
 const main = document.querySelector('main')
+
+const query = 'A sci-fi movie with fantasy world'
+
+// mainFn()
+async function mainFn() {
+    const embedding = await createEmbedding(query)
+    const match = await findNearestMatch(embedding)
+    await getChatCompletion(match, query)
+}
+
+async function findNearestMatch(embedding) {
+    const { data } = await supabase.rpc('match_movies', {
+        query_embedding: embedding,
+        match_threshold: 0.5,
+        match_count: 1
+    })
+
+    console.log(data)
+    return data.map(obj => obj.content).join('\n');
+}
+
+async function createEmbedding(query) {
+    const embeddingResponse = await getEmbedding([query])
+    return embeddingResponse[0]
+}
+
+async function createAndStoreEmbeddings() {
+    const movieContentList = movies.map((movie) => movie.content)
+    const embeddingResponse = await getEmbedding(movieContentList)
+    console.log(embeddingResponse)
+    const data = embeddingResponse.map((embedding, index) => {
+        return {
+            content: movieContentList[index],
+            embedding: embedding
+        }
+    })
+
+    await supabase.from('movies').insert(data)
+    console.log('Embeddings stored in Supabase')
+}
+
+async function getChatCompletion(text, query) {
+    const messages = [
+        {
+            role: 'system',
+            content: `You are an enthusiastic movie expert who loves recommending movies to people. You will be given two pieces of information - some context about movies and a question. Your main job is to formulate a short answer to the question using the provided context. If you are unsure and cannot find the answer in the context, say, "Sorry, I don't know the answer." Please do not make up the answer.`
+        },
+        {
+            role: 'user',
+            content: `Context: ${text} Question: ${query}`
+        }
+    ]
+
+    const data = await chatCompletions(messages)
+    console.log(data)
+}
 
 function renderMain() {
     main.innerHTML = `
@@ -24,20 +80,6 @@ function renderMain() {
             </form>
         </section>
     `
-}
-
-async function createAndStoreEmbeddings() {
-    const movieContentList = movies.map((movie) => movie.content)
-    const embeddingResponse = await getEmbedding(movieContentList)
-    console.log(embeddingResponse)
-    const data = embeddingResponse.map((embedding, index) => {
-        return {
-            content: movieContentList[index],
-            embedding: embedding
-        }
-    })
-
-    await supabase.from('movies').insert(data)
 }
 
 // createAndStoreEmbeddings()

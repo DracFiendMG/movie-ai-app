@@ -6,7 +6,7 @@ if (!hfApiKey) throw new Error("Hugging Face API key is missing or invalid.");
 
 export async function getEmbedding(text) {
   const response = await fetch(
-    "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2",
+    "/api/huggingface/hf-inference/models/intfloat/multilingual-e5-large/pipeline/feature-extraction",
     {
       method: "POST",
       headers: {
@@ -26,6 +26,39 @@ export async function getEmbedding(text) {
   
   const result = await response.json();
   return result;
+}
+
+export async function chatCompletions(messages) {
+  try {
+    const response = await fetch('/api/groq/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`
+      },
+      body: JSON.stringify({
+          model: 'openai/gpt-oss-20b',
+          messages: messages,
+          temperature: 1,
+          max_tokens: 1000
+      })
+    })
+
+    const data = await response.json();
+    console.log(data)
+
+    if (!response.ok) {
+        throw new Error(data.error?.message || 'OpenAI API error')
+    }
+
+    return Response.json({
+        suggestion: data.choices[0].message.content
+    }, { status: 200 })
+  } catch (err) {
+    return Response.json({
+        error: err.message 
+    }, { status: 500 })
+  }
 }
 
 /** Supabase config */

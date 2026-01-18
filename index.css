@@ -21,7 +21,7 @@ main {
     margin: 0 2em 2em;
 }
 
-#movie-info {
+#movie-interests {
     display: flex;
     flex-direction: column;
     gap: 2.25em;

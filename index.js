@@ -2,15 +2,29 @@ import { getEmbedding, chatCompletions, supabase } from './config.js';
 import content from './content.js';
 import movies from './content.js'
 
+const state = {
+    questionsPage: true
+}
+
 const main = document.querySelector('main')
 
-const query = 'A sci-fi movie with fantasy world'
+// This will be written like this: ${questionOne} ${questionTwo} ${questionThree}`
+let questionOne = 'John Carter'
+let questionTwo = 'I want to watch a movie released after 1990'
+let questionThree = 'I want to watch something serious'
+const query = `${questionOne} ${questionTwo} ${questionThree}`
+
+function fetchMovieInterests(e) {
+    e.preventDefault()
+
+    const formData = new FormData(movieInterestsForm)
+}
 
 // mainFn()
 async function mainFn() {
     const embedding = await createEmbedding(query)
     const match = await findNearestMatch(embedding)
-    await getChatCompletion(match, query)
+    // await getChatCompletion(match, query)
 }
 
 async function findNearestMatch(embedding) {
@@ -61,27 +75,41 @@ async function getChatCompletion(text, query) {
 }
 
 function renderMain() {
-    main.innerHTML = `
-        <section id="questions">
-            <form id="movie-info">
-                <div class="question">
-                    <label for="question-one">What’s your favorite movie and why?</label>
-                    <textarea id="question-one" name="question-one"></textarea>
+    if (state.questionsPage) {
+        main.innerHTML = `
+            <section id="questions">
+                <form id="movie-interests">
+                    <div class="question">
+                        <label for="question-one">What’s your favorite movie and why?</label>
+                        <textarea id="question-one" name="question-one"></textarea>
+                    </div>
+                    <div class="question">
+                        <label for="question-two">Are you in the mood for something new or a classic?</label>
+                        <textarea id="question-two" name="question-two"></textarea>
+                    </div>
+                    <div class="question">
+                        <label for="question-three">Do you wanna have fun or do you want something serious?</label>
+                        <textarea id="question-three" name="question-three"></textarea>
+                    </div>
+                    <button>Let's Go</button>
+                </form>
+            </section>
+        `
+        const movieInterestsForm = document.getElementById('movie-interests')
+        movieInterestsForm.addEventListener('submit', fetchMovieInterests)
+    } else {
+        main.innerHTML = `
+            <section id="answers">
+                <div id="movie">
+                    <h2 id="title">School of Rock (2009)</h2>
+                    <p id="description">A fun and stupid movie about a wannabe rocker turned fraud substitute teacher forming a rock band with his students to win the Battle of the Bands</p>
                 </div>
-                <div class="question">
-                    <label for="question-two">Are you in the mood for something new or a classic?</label>
-                    <textarea id="question-two" name="question-two"></textarea>
-                </div>
-                <div class="question">
-                    <label for="question-three">Do you wanna have fun or do you want something serious?</label>
-                    <textarea id="question-three" name="question-three"></textarea>
-                </div>
-                <button>Let's Go</button>
-            </form>
-        </section>
-    `
+                <button>Go Again</button>
+            </section>
+        `
+    }
 }
 
 // createAndStoreEmbeddings()
 
-// renderMain()
+renderMain()

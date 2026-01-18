@@ -27,11 +27,11 @@ async function fetchMovieInterests(e) {
         answers.push(value)
     }
 
-    await getRecommendation(query, answers)
+    const recommendation = await getRecommendation(query, answers)
 
     movieInterestsForm.reset()
     state.questionsPage = false
-    renderMain()
+    renderMain(recommendation)
 }
 
 async function getRecommendation(query, answers) {
@@ -45,7 +45,7 @@ async function getRecommendation(query, answers) {
         }
     })
 
-    await getChatCompletion(match, qna)
+    return await getChatCompletion(match, qna)
 }
 
 async function findNearestMatch(embedding) {
@@ -86,20 +86,29 @@ async function getChatCompletion(text, query) {
     const messages = [
         {
             role: 'system',
-            content: `You are an enthusiastic movie expert who loves recommending movies to people. You will be given context about movies and the user's preferences through their answers to three questions. Based on this information, recommend a movie that best matches their preferences. If you cannot find a suitable match in the context, say "Sorry, I don't have a recommendation based on your preferences." Do not make up movies that aren't in the context.`
+            content: `You are an enthusiastic movie expert who loves recommending movies to people. You will be given context about movies and the user's preferences through their answers to three questions. Based on this information, recommend a movie that best matches their preferences. If you cannot find a suitable match in the context, say "Sorry, I don't have a recommendation based on your preferences." Do not make up movies that aren't in the context.
+            
+Respond ONLY in the following JSON format:
+{
+    "title": "Movie Title (Year)",
+    "description": "A single short paragraph explaining why this movie is perfect for the user based on their preferences."
+}`
         },
         {
             role: 'user',
-            content: `Movie Context:\n${text}\n\nUser Preferences:\n${formattedQnA}\n\nBased on my answers above, what movie would you recommend for me?`
+            content: `Movie Context:\n${text}\n\nUser Preferences:\n${formattedQnA}\n\nBased on my answers above, what movie would you recommend for me? Remember to respond in JSON format with title and description.`
         }
     ]
 
     const response = await chatCompletions(messages)
     const data = await response.json()
-    console.log(data.suggestion)
+    const recommendation = JSON.parse(data.suggestion)
+    console.log('Title:', recommendation.title)
+    console.log('Description:', recommendation.description)
+    return recommendation
 }
 
-function renderMain() {
+function renderMain(recommendation) {
     if (state.questionsPage) {
         main.innerHTML = `
             <section id="questions">
@@ -126,8 +135,8 @@ function renderMain() {
         main.innerHTML = `
             <section id="answers">
                 <div id="movie">
-                    <h2 id="title">School of Rock (2009)</h2>
-                    <p id="description">A fun and stupid movie about a wannabe rocker turned fraud substitute teacher forming a rock band with his students to win the Battle of the Bands</p>
+                    <h2 id="title">${recommendation.title}</h2>
+                    <p id="description">${recommendation.description}</p>
                 </div>
                 <button id="startover">Go Again</button>
             </section>
@@ -137,4 +146,4 @@ function renderMain() {
 
 // createAndStoreEmbeddings()
 
-renderMain()
+renderMain(null)

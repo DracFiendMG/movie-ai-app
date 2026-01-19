@@ -141,6 +141,10 @@ function renderMain(recommendation) {
                 <button id="startover">Go Again</button>
             </section>
         `
+        document.getElementById('startover').addEventListener('click', () => {
+            state.questionsPage = true
+            renderMain(null)
+        })
     }
 }
 

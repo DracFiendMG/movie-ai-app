@@ -1,6 +1,10 @@
 import { getEmbedding, chatCompletions, supabase } from './config.js';
 import movies from './content.js'
 
+const view = {
+    multiPersonView: false
+}
+
 const state = {
     questionsPage: true
 }
@@ -109,42 +113,46 @@ Respond ONLY in the following JSON format:
 }
 
 function renderMain(recommendation) {
-    if (state.questionsPage) {
-        main.innerHTML = `
-            <section id="questions">
-                <form id="movie-interests">
-                    <div class="question">
-                        <label for="question-one">What’s your favorite movie and why?</label>
-                        <textarea id="question-one" name="question-one"></textarea>
-                    </div>
-                    <div class="question">
-                        <label for="question-two">Are you in the mood for something new or a classic?</label>
-                        <textarea id="question-two" name="question-two"></textarea>
-                    </div>
-                    <div class="question">
-                        <label for="question-three">Do you wanna have fun or do you want something serious?</label>
-                        <textarea id="question-three" name="question-three"></textarea>
-                    </div>
-                    <button>Let's Go</button>
-                </form>
-            </section>
-        `
-        const movieInterestsForm = document.getElementById('movie-interests')
-        movieInterestsForm.addEventListener('submit', fetchMovieInterests)
+    if (view.multiPersonView) {
+
     } else {
-        main.innerHTML = `
-            <section id="answers">
-                <div id="movie">
-                    <h2 id="title">${recommendation.title}</h2>
-                    <p id="description">${recommendation.description}</p>
-                </div>
-                <button id="startover">Go Again</button>
-            </section>
-        `
-        document.getElementById('startover').addEventListener('click', () => {
-            state.questionsPage = true
-            renderMain(null)
-        })
+        if (state.questionsPage) {
+            main.innerHTML = `
+                <section id="questions">
+                    <form id="movie-interests">
+                        <div class="question">
+                            <label for="question-one">What’s your favorite movie and why?</label>
+                            <textarea id="question-one" name="question-one"></textarea>
+                        </div>
+                        <div class="question">
+                            <label for="question-two">Are you in the mood for something new or a classic?</label>
+                            <textarea id="question-two" name="question-two"></textarea>
+                        </div>
+                        <div class="question">
+                            <label for="question-three">Do you wanna have fun or do you want something serious?</label>
+                            <textarea id="question-three" name="question-three"></textarea>
+                        </div>
+                        <button>Let's Go</button>
+                    </form>
+                </section>
+            `
+            const movieInterestsForm = document.getElementById('movie-interests')
+            movieInterestsForm.addEventListener('submit', fetchMovieInterests)
+        } else {
+            main.innerHTML = `
+                <section id="answers">
+                    <div id="movie">
+                        <h2 id="title">${recommendation.title}</h2>
+                        <p id="description">${recommendation.description}</p>
+                    </div>
+                    <button id="startover">Go Again</button>
+                </section>
+            `
+            document.getElementById('startover').addEventListener('click', () => {
+                state.questionsPage = true
+                renderMain(null)
+            })
+        }
     }
 }
 

@@ -8,13 +8,21 @@ html, body {
 
 header {
     display: flex;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
     margin: 3.125em 5em;
 }
 
 header img {
     flex: 1;
-    max-width: 235px;
+    max-width: 99px;
+}
+
+header h1 {
+    font-size: 2.8125em;
+    font-family: "Carter One", system-ui;
+    margin: 0;
 }
 
 main {

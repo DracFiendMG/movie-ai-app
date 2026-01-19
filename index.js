@@ -6,8 +6,9 @@ const view = {
 }
 
 const state = {
-    questionsPage: true,
-    multiPersonViewQuestionsPage: false
+    questionsPage: false,
+    multiPersonViewQuestionsPage: false,
+    headingWithTitle: true
 }
 
 const questions = [
@@ -113,9 +114,17 @@ Respond ONLY in the following JSON format:
     return recommendation
 }
 
+function renderHeading() {
+    const heading = document.getElementById('heading')
+
+    if (state.headingWithTitle) {
+        heading.textContent = 'PopChoice'
+    }
+}
+
 function renderMain(recommendation) {
     if (view.multiPersonView) {
-        if (state.multiPersonViewQuestionsPage) {
+        if (state.questionsPage) {
             main.innerHTML = `
                 <section>
                     <form id="survey-form">
@@ -125,6 +134,46 @@ function renderMain(recommendation) {
                     </form>
                 </section>
             `
+        } else if (state.multiPersonViewQuestionsPage) {
+            main.innerHTML = `
+                <section>
+                    <form id="movie-interests">
+                        <div class="question">
+                            <label for="question-one">What’s your favorite movie and why?</label>
+                            <textarea id="question-one" name="question-one"></textarea>
+                        </div>
+                        <div class="question">
+                            <p>Are you in the mood for something new or a classic?</p>
+                            <div class="selection">
+                                <input type="radio" id="new" name="mood">
+                                <label for="new">New</label>
+                                <input type="radio" id="classic" name="mood">
+                                <label for="classic">Classic</label>
+                            </div>
+                        </div>
+                        <div class="question">
+                            <p>What are you in the mood for?</p>
+                            <div class="selection">
+                                <input type="radio" id="fun" name="mood-type">
+                                <label for="fun">Fun</label>
+                                <input type="radio" id="serious" name="mood-type">
+                                <label for="serious">Serious</label>
+                                <input type="radio" id="inspiring" name="mood-type">
+                                <label for="inspiring">Inspiring</label>
+                                <input type="radio" id="scary" name="mood-type">
+                                <label for="scary">Scary</label>
+                            </div>
+                        </div>
+                        <div class="question">
+                            <label>Which famous film person would you love to be stranded on an island with and why?</label>
+                            <textarea></textarea>
+                        </div>
+                        <button type="submit">Next Person</button>
+                    </form>
+                </section>
+            `
+        } else {
+            
         }
     } else {
         if (state.questionsPage) {
@@ -169,4 +218,5 @@ function renderMain(recommendation) {
 
 // createAndStoreEmbeddings()
 
+renderHeading()
 renderMain(null)

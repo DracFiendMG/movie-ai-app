@@ -2,6 +2,7 @@
 <html>
     <head>
         <title>PopChoice</title>
+        <meta charset="utf-8">
         <link rel="stylesheet" href="index.css">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,7 +14,41 @@
             <h1>PopChoice</h1>
         </header>
         <main>
-            
+            <section>
+                <form id="movie-interests">
+                    <div class="question">
+                        <label for="question-one">What’s your favorite movie and why?</label>
+                        <textarea id="question-one" name="question-one"></textarea>
+                    </div>
+                    <div class="question">
+                        <p>Are you in the mood for something new or a classic?</p>
+                        <div class="selection">
+                            <input type="radio" id="new" name="mood">
+                            <label for="new">New</label>
+                            <input type="radio" id="classic" name="mood">
+                            <label for="classic">Classic</label>
+                        </div>
+                    </div>
+                    <div class="question">
+                        <p>What are you in the mood for?</p>
+                        <div class="selection">
+                            <input type="radio" id="fun" name="mood-type">
+                            <label for="fun">Fun</label>
+                            <input type="radio" id="serious" name="mood-type">
+                            <label for="serious">Serious</label>
+                            <input type="radio" id="inspiring" name="mood-type">
+                            <label for="inspiring">Inspiring</label>
+                            <input type="radio" id="scary" name="mood-type">
+                            <label for="scary">Scary</label>
+                        </div>
+                    </div>
+                    <div class="question">
+                        <label>Which famous film person would you love to be stranded on an island with and why?</label>
+                        <textarea></textarea>
+                    </div>
+                    <button type="submit">Next Person</button>
+                </form>
+            </section>
         </main>
         <script type="module" src="index.js"></script>
     </body>

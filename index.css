@@ -59,7 +59,7 @@ main {
     font-size: 1.125em;
 }
 
-textarea {
+textarea, input[type="text"], input[type="number"] {
     field-sizing: content;
     resize: none;
     background-color: #3B4877;
@@ -74,9 +74,47 @@ textarea {
 }
 
 textarea:active,
-textarea:focus {
+textarea:focus,
+input[type="text"]:active,
+input[type="text"]:focus,
+input[type="number"]:active,
+input[type="number"]:focus {
     outline: none;
     box-shadow: 0 0 0 2px #51E08A;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+    appearance: none;
+}
+
+input[type="number"]:hover {
+    cursor: text;
+}
+
+input[type="text"],
+input[type="number"] {
+    font-size: 1.125em;
+}
+
+input::placeholder {
+    /* font-size: 1.125em; */
+    color: #000C36;
+}
+
+input[type="radio"] {
+    appearance: none;
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    margin: 0
 }
 
 button {
@@ -88,4 +126,26 @@ button {
     border: none;
     border-radius: 10px;
     padding: 0.5em;
+}
+
+#survey-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5em;
+}
+
+.selection {
+    display: flex;
+    gap: 0.5em;
+}
+
+.selection label {
+    background-color: #3B4877;
+    padding: 0.5em 1em;
+    border-radius: 5px;
+}
+
+.selection input[type="radio"]:checked + label {
+    background-color: #51E08A;
+    color: #000C36;
 }

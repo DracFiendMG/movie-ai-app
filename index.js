@@ -2,11 +2,12 @@ import { getEmbedding, chatCompletions, supabase } from './config.js';
 import movies from './content.js'
 
 const view = {
-    multiPersonView: false
+    multiPersonView: true
 }
 
 const state = {
-    questionsPage: true
+    questionsPage: true,
+    multiPersonViewQuestionsPage: false
 }
 
 const questions = [
@@ -114,7 +115,17 @@ Respond ONLY in the following JSON format:
 
 function renderMain(recommendation) {
     if (view.multiPersonView) {
-
+        if (state.multiPersonViewQuestionsPage) {
+            main.innerHTML = `
+                <section>
+                    <form id="survey-form">
+                        <input id="numberOfPeople" type="number" min="1" max="10" step="1" name="numberOfPeople" placeholder="How many people?">
+                        <input id="time" type="text" name="time" placeholder="How much time do you have?">
+                        <button type="submit">Start</button>
+                    </form>
+                </section>
+            `
+        }
     } else {
         if (state.questionsPage) {
             main.innerHTML = `

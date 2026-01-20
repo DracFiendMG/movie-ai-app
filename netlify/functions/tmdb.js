@@ -4,17 +4,8 @@ export default async (req) => {
     const query = url.searchParams.get('query');
     
     const apiKey = process.env.TMDB_API_KEY;
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'TMDB_API_KEY not configured' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
     
-    const tmdbUrl = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}`;
-    console.log('Fetching TMDB:', tmdbUrl.replace(apiKey, '***'));
-    
-    const response = await fetch(tmdbUrl);
+    const response = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}`);
     
     if (!response.ok) {
       const errorText = await response.text();

@@ -1,14 +1,19 @@
 import { getEmbedding, chatCompletions, getMovieImage, supabase } from './config.js';
 import movies from './content.js'
 
+let currentPage = 1
+let peopleCount = 1
+let time = '2 Hours'
+let moviePoll = []
+
 const view = {
     multiPersonView: true
 }
 
 const state = {
-    questionsPage: false,
+    questionsPage: true,
     multiPersonViewQuestionsPage: false,
-    headingWithTitle: false
+    headingWithTitle: true
 }
 
 const questions = [
@@ -38,6 +43,15 @@ async function fetchMovieInterests(e) {
     movieInterestsForm.reset()
     state.questionsPage = false
     renderMain(recommendation)
+}
+
+async function fetchMovies(e) {
+    e.preventDefault()
+
+    const response = await getMovieImage('The Martian')
+    console.log(response.results[0].poster_path)
+
+    //TODO: https://image.tmdb.org/t/p/[size]/[poster_path]
 }
 
 async function getRecommendation(query, answers) {
@@ -115,11 +129,51 @@ Respond ONLY in the following JSON format:
     return recommendation
 }
 
+function renderMultiPersonViewQuestions(e) {
+    e.preventDefault()
+
+    const surveyForm = document.getElementById('survey-form')
+    const formData = new FormData(surveyForm)
+
+    peopleCount = formData.get('numberOfPeople')
+    time = formData.get('time')
+
+    state.questionsPage = false
+    state.multiPersonViewQuestionsPage = true
+    state.headingWithTitle = false
+    renderHeading()
+    renderMain(null)
+}
+
+function renderQuestions(e) {
+    e.preventDefault()
+
+    const movieInterestsForm = document.getElementById('movie-interests')
+    const movieInterestsFormData = new FormData(movieInterestsForm)
+    const interests = Object.fromEntries(movieInterestsFormData.entries())
+
+    moviePoll.push(interests)
+
+    console.log(moviePoll)
+
+    currentPage++
+    renderHeading()
+    renderMain(null)
+}
+
+function renderRecommendation() {
+    
+}
+
 function renderHeading() {
     const heading = document.getElementById('heading')
 
     if (state.headingWithTitle) {
         heading.textContent = 'PopChoice'
+    } else {
+        heading.textContent = currentPage
+        heading.style.fontFamily = 'Roboto Slab, serif'
+        heading.style.fontSize = '3.125em'
     }
 }
 
@@ -136,6 +190,7 @@ function renderMain(recommendation) {
                     </form>
                 </section>
             `
+            document.getElementById('survey-form').addEventListener('submit', renderMultiPersonViewQuestions)
         } else if (state.multiPersonViewQuestionsPage) {
             main.innerHTML = `
                 <section>
@@ -147,35 +202,53 @@ function renderMain(recommendation) {
                         <div class="question">
                             <p>Are you in the mood for something new or a classic?</p>
                             <div class="selection">
-                                <input type="radio" id="new" name="mood">
+                                <input type="radio" id="new" name="mood" value="new">
                                 <label for="new">New</label>
-                                <input type="radio" id="classic" name="mood">
+                                <input type="radio" id="classic" name="mood" value="classic">
                                 <label for="classic">Classic</label>
                             </div>
                         </div>
                         <div class="question">
                             <p>What are you in the mood for?</p>
                             <div class="selection">
-                                <input type="radio" id="fun" name="mood-type">
+                                <input type="radio" id="fun" name="mood-type" value="fun">
                                 <label for="fun">Fun</label>
-                                <input type="radio" id="serious" name="mood-type">
+                                <input type="radio" id="serious" name="mood-type" value="serious">
                                 <label for="serious">Serious</label>
-                                <input type="radio" id="inspiring" name="mood-type">
+                                <input type="radio" id="inspiring" name="mood-type" value="inspiring">
                                 <label for="inspiring">Inspiring</label>
-                                <input type="radio" id="scary" name="mood-type">
+                                <input type="radio" id="scary" name="mood-type" value="scary">
                                 <label for="scary">Scary</label>
                             </div>
                         </div>
                         <div class="question">
-                            <label>Which famous film person would you love to be stranded on an island with and why?</label>
-                            <textarea></textarea>
+                            <label for="favorite-actor">Which famous film person would you love to be stranded on an island with and why?</label>
+                            <textarea id="favorite-actor" name="favorite-actor"></textarea>
                         </div>
-                        <button type="submit">Next Person</button>
+                        <button type="submit">${ currentPage < peopleCount ? 'Next Person' : 'Get Movie' }</button>
                     </form>
                 </section>
             `
+
+            document
+                .getElementById('movie-interests')
+                .addEventListener('submit', 
+                    currentPage < peopleCount 
+                    ? renderQuestions 
+                    : renderRecommendation
+                )
         } else {
-            
+            main.innerHTML = `
+                <section id="answers">
+                    <div id="movie">
+                        <h2 id="title">The Martian (2015)</h2>
+                        <img id="poster" src="${imgUrl}" alt="The Martian Movie Poster">
+                        <p id="description">The inspiring story of an astronaut stranded on Mars who needs to rely on his ingenuity to come back to Earth</p>
+                    </div>
+                    <button id="startover">Next Movie</button>
+                </section>
+            `
+            document.getElementById('startover').addEventListener('click', fetchMovies)
         }
     } else {
         if (state.questionsPage) {
@@ -219,7 +292,5 @@ function renderMain(recommendation) {
 }
 
 // createAndStoreEmbeddings()
-
-getMovieImage('mario').then(data => console.log(data))
 renderHeading()
 renderMain(null)

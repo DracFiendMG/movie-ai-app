@@ -47,12 +47,14 @@ export async function chatCompletions(messages) {
 
 /** TMDB - uses Netlify function to hide API key */
 export async function getMovieImage(query) {
-  const response = await fetch(`/.netlify/functions/tmdb?query=${query}`);
+  const response = await fetch(`/.netlify/functions/tmdb?query=${query}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
   if (!response.ok) {
     throw new Error(`TMDB API error: ${response.statusText}`);
   }
   const data = await response.json();
-  console.log(data);
   return data;
 }
 

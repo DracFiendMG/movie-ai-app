@@ -21,6 +21,14 @@ export default defineConfig({
 				headers: {
 					'Origin': 'https://api.groq.com'
 				}
+			},
+			'/api/tmdb': {
+				target: 'https://api.themoviedb.org',
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/api\/tmdb/, ''),
+				headers: {
+					'Origin': 'https://api.themoviedb.org'
+				}
 			}
 		}
 	}

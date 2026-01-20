@@ -1,4 +1,4 @@
-import { getEmbedding, chatCompletions, supabase } from './config.js';
+import { getEmbedding, chatCompletions, getMovieImage, supabase } from './config.js';
 import movies from './content.js'
 
 const view = {
@@ -8,7 +8,7 @@ const view = {
 const state = {
     questionsPage: false,
     multiPersonViewQuestionsPage: false,
-    headingWithTitle: true
+    headingWithTitle: false
 }
 
 const questions = [
@@ -55,6 +55,7 @@ async function getRecommendation(query, answers) {
 }
 
 async function findNearestMatch(embedding) {
+    console.log('Finding nearest match for embedding:', embedding)
     const { data } = await supabase.rpc('match_movies', {
         query_embedding: embedding,
         match_threshold: 0.5,
@@ -107,8 +108,8 @@ Respond ONLY in the following JSON format:
     ]
 
     const response = await chatCompletions(messages)
-    const data = await response.json()
-    const recommendation = JSON.parse(data.suggestion)
+    // const data = await response.json()
+    const recommendation = JSON.parse(response.suggestion)
     console.log('Title:', recommendation.title)
     console.log('Description:', recommendation.description)
     return recommendation
@@ -123,6 +124,7 @@ function renderHeading() {
 }
 
 function renderMain(recommendation) {
+    console.log('Rendering main with state:', state)
     if (view.multiPersonView) {
         if (state.questionsPage) {
             main.innerHTML = `
@@ -218,5 +220,6 @@ function renderMain(recommendation) {
 
 // createAndStoreEmbeddings()
 
+getMovieImage('mario').then(data => console.log(data))
 renderHeading()
 renderMain(null)

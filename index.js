@@ -105,7 +105,6 @@ async function createEmbedding(query) {
 
 async function createEmbeddings(queries) {
     const embeddingResponse = await getEmbedding(queries)
-    console.log(`Created embeddings for queries:`, embeddingResponse)
     return embeddingResponse.map(embedding => JSON.stringify(embedding))
 }
 
@@ -138,6 +137,37 @@ Respond ONLY in the following JSON format:
     return recommendation
 }
 
+async function getChatCompletionForMultiView(text) {
+    const messages = [
+        {
+            role: 'system',
+            content: `You are an enthusiastic movie expert who loves recommending movies to people. You will be given context about movies and multiple users' preferences. Based on this information, recommend a movie that best matches the group's preferences. If you cannot find a suitable match in the context, say "Sorry, I don't have a recommendation based on your preferences." Do not make up movies that aren't in the context.
+Respond ONLY in the following JSON format:
+[
+    {
+        "title": "Movie Title",
+        "year": "Year",
+        "description": "A single short paragraph explaining why this movie is perfect for every person based on their preferences."
+    },
+    {
+        "title": "Movie Title (Year)",
+        "year": "Year",
+        "description": "A single short paragraph explaining why this movie is second choice for every person based on their preferences."
+    }
+]`
+        },
+        {
+            role: 'user',
+            content: `Movie Context:\n${text}\n\nBased on the list movies above, what movies would you recommend for the group? Remember to respond in JSON format with title, year, and description.`
+        }
+    ]
+
+    const response = await chatCompletions(messages)
+    const recommendation = JSON.parse(response.suggestion)
+    console.log('Recommendations:', recommendation)
+    return recommendation
+}
+
 async function beautifyQuery(query) {
     const messages = [
         {
@@ -151,7 +181,8 @@ async function beautifyQuery(query) {
                         "Person 1's concise query",
                         "Person 2's concise query",
                         "...",
-                        "Person N's concise query"
+                        "Person N's concise query",
+                        "Maximum available time for the movie session: [time period]"
                     ]
                     `
         },
@@ -196,11 +227,12 @@ async function renderQuestions(e) {
         console.log('All participants have submitted their answers:', moviePoll)
         state.multiPersonViewQuestionsPage = false
         header.classList.add('hidden')
-        let queries = await beautifyQuery(interestsToQuery(moviePoll))
-        console.log('Beautified queries:', queries)
-        const data = await findNearestMatches(await createEmbeddings(queries), 3)
 
-        console.log('Matched movie contents:', data)
+        let queries = await beautifyQuery(interestsToQuery(moviePoll))
+        const data = await findNearestMatches(await createEmbeddings(queries), 3)
+        const recommendation = await getChatCompletionForMultiView(data.join('\n\n'))
+        console.log('Movie recommendation for group:', recommendation)
+
         renderMain(null)
     } else {
         currentPage++
@@ -219,6 +251,8 @@ function interestsToQuery(interests = moviePoll) {
             query += `${multiViewQuestions[questionIndex++]}: ${answer}.\n`
         }
     })
+
+    query += `\nThe group has a maximum available time of ${time} to watch a movie together.`
 
     console.log(query)
     return query

@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters'
 
+import movies from './content.js'
+
 /** Hugging Face - uses Netlify function to hide API key */
 export async function getEmbedding(text) {
   const response = await fetch('/.netlify/functions/huggingface', {

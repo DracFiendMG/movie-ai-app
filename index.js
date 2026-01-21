@@ -1,5 +1,4 @@
 import { getEmbedding, chatCompletions, getMovieImage, supabase } from './config.js';
-import movies from './content.js'
 
 let currentPage = 1
 let peopleCount = 1
@@ -20,6 +19,13 @@ const questions = [
     'What’s your favorite movie and why?',
     'Are you in the mood for something new or a classic?',
     'Do you wanna have fun or do you want something serious?'
+]
+
+const multiViewQuestions = [
+    'What’s your favorite movie and why?',
+    'Are you in the mood for something new or a classic?',
+    'What are you in the mood for?',
+    'Which famous film person would you love to be stranded on an island with and why?'
 ]
 
 const main = document.querySelector('main')
@@ -83,7 +89,7 @@ async function findNearestMatch(embedding) {
 async function findNearestMatches(embeddings, count = 3) {
     console.log('Finding nearest matches for embedding:', embeddings)
     const { data } = await supabase.rpc('match_all_movies', {
-        query_embedding: embeddings,
+        query_embeddings: embeddings,
         match_threshold: 0.5,
         match_count: count
     })
@@ -95,6 +101,12 @@ async function findNearestMatches(embeddings, count = 3) {
 async function createEmbedding(query) {
     const embeddingResponse = await getEmbedding([query])
     return embeddingResponse[0]
+}
+
+async function createEmbeddings(queries) {
+    const embeddingResponse = await getEmbedding(queries)
+    console.log(`Created embeddings for queries:`, embeddingResponse)
+    return embeddingResponse.map(embedding => JSON.stringify(embedding))
 }
 
 async function getChatCompletion(text, query) {
@@ -126,6 +138,33 @@ Respond ONLY in the following JSON format:
     return recommendation
 }
 
+async function beautifyQuery(query) {
+    const messages = [
+        {
+            role: 'system',
+            content: `You are a helpful assistant that reformats user input into clear and concise queries. 
+                    You will be given raw user inputs of multiple persons about their movie preferences. 
+                    Your task is to extract the key details and rephrase them into a well-structured query that captures the essence of what the user is looking for in a movie.
+                    
+                    Respond ONLY in the following JSON format:
+                    [ 
+                        "Person 1's concise query",
+                        "Person 2's concise query",
+                        "...",
+                        "Person N's concise query"
+                    ]
+                    `
+        },
+        {
+            role: 'user',
+            content: `User Input:\n${query}\n\nPlease reformat the above input into a clear and concise query that captures the user's movie preferences.`
+        }
+    ]
+
+    const response = await chatCompletions(messages)
+    return JSON.parse(response.suggestion)
+}
+
 function renderMultiPersonViewQuestions(e) {
     e.preventDefault()
 
@@ -142,7 +181,7 @@ function renderMultiPersonViewQuestions(e) {
     renderMain(null)
 }
 
-function renderQuestions(e) {
+async function renderQuestions(e) {
     e.preventDefault()
 
     const movieInterestsForm = document.getElementById('movie-interests')
@@ -157,13 +196,32 @@ function renderQuestions(e) {
         console.log('All participants have submitted their answers:', moviePoll)
         state.multiPersonViewQuestionsPage = false
         header.classList.add('hidden')
+        let queries = await beautifyQuery(interestsToQuery(moviePoll))
+        console.log('Beautified queries:', queries)
+        const data = await findNearestMatches(await createEmbeddings(queries), 3)
 
+        console.log('Matched movie contents:', data)
         renderMain(null)
     } else {
         currentPage++
         renderHeading()
         renderMain(null)
     }
+}
+
+function interestsToQuery(interests = moviePoll) {
+    let query = ''
+    
+    interests.forEach((person, index) => {
+        query += `Person ${index + 1}:\n`
+        let questionIndex = 0
+        for (const [question, answer] of Object.entries(person)) {
+            query += `${multiViewQuestions[questionIndex++]}: ${answer}.\n`
+        }
+    })
+
+    console.log(query)
+    return query
 }
 
 function fetchRecommendation() {

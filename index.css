@@ -149,3 +149,7 @@ button {
     background-color: #51E08A;
     color: #000C36;
 }
+
+.hidden {
+    display: none;
+}

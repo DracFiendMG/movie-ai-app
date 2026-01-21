@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters'
 
 /** Hugging Face - uses Netlify function to hide API key */
 export async function getEmbedding(text) {
@@ -57,6 +58,46 @@ export async function getMovieImage(query) {
   const data = await response.json();
   return data;
 }
+
+async function createAndStoreEmbeddings() {
+    const movieContentList = movies.map((movie) => movie.content)
+    const embeddingResponse = await getEmbedding(movieContentList)
+    console.log(embeddingResponse)
+    const data = embeddingResponse.map((embedding, index) => {
+        return {
+            content: movieContentList[index],
+            embedding: embedding
+        }
+    })
+
+    await supabase.from('movies').insert(data)
+    console.log('Embeddings stored in Supabase')
+}
+
+async function splitMovieTextAndStoreEmbeddings() {
+  const document = await fetch('/movies.txt')
+  const response = await document.text()
+
+  const textSplitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 150,
+    chunkOverlap: 15
+  })
+
+  const chunkData = await textSplitter.splitText(response)
+  const embeddingResponse = await getEmbedding(chunkData)
+
+  const data = embeddingResponse.map((embedding, index) => {
+      return {
+          content: chunkData[index],
+          embedding: embedding
+      }
+  })
+
+  await supabase.from('movies').insert(data)
+  console.log('Movie text chunks and embeddings stored in Supabase')
+}
+
+// splitMovieTextAndStoreEmbeddings()
 
 /** Supabase config */
 const privateKey = import.meta.env.VITE_SUPABASE_API_KEY;

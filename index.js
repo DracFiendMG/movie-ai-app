@@ -23,6 +23,7 @@ const questions = [
 ]
 
 const main = document.querySelector('main')
+const header = document.querySelector('header')
 
 async function fetchMovieInterests(e) {
     e.preventDefault()
@@ -79,24 +80,21 @@ async function findNearestMatch(embedding) {
     return data.map(obj => obj.content).join('\n');
 }
 
+async function findNearestMatches(embeddings, count = 3) {
+    console.log('Finding nearest matches for embedding:', embeddings)
+    const { data } = await supabase.rpc('match_all_movies', {
+        query_embedding: embeddings,
+        match_threshold: 0.5,
+        match_count: count
+    })
+
+    console.log(data)
+    return data.map(obj => obj.content);
+}
+
 async function createEmbedding(query) {
     const embeddingResponse = await getEmbedding([query])
     return embeddingResponse[0]
-}
-
-async function createAndStoreEmbeddings() {
-    const movieContentList = movies.map((movie) => movie.content)
-    const embeddingResponse = await getEmbedding(movieContentList)
-    console.log(embeddingResponse)
-    const data = embeddingResponse.map((embedding, index) => {
-        return {
-            content: movieContentList[index],
-            embedding: embedding
-        }
-    })
-
-    await supabase.from('movies').insert(data)
-    console.log('Embeddings stored in Supabase')
 }
 
 async function getChatCompletion(text, query) {
@@ -122,7 +120,6 @@ Respond ONLY in the following JSON format:
     ]
 
     const response = await chatCompletions(messages)
-    // const data = await response.json()
     const recommendation = JSON.parse(response.suggestion)
     console.log('Title:', recommendation.title)
     console.log('Description:', recommendation.description)
@@ -135,7 +132,7 @@ function renderMultiPersonViewQuestions(e) {
     const surveyForm = document.getElementById('survey-form')
     const formData = new FormData(surveyForm)
 
-    peopleCount = formData.get('numberOfPeople')
+    peopleCount = Number(formData.get('numberOfPeople'))
     time = formData.get('time')
 
     state.questionsPage = false
@@ -156,12 +153,20 @@ function renderQuestions(e) {
 
     console.log(moviePoll)
 
-    currentPage++
-    renderHeading()
-    renderMain(null)
+    if (currentPage === peopleCount) {
+        console.log('All participants have submitted their answers:', moviePoll)
+        state.multiPersonViewQuestionsPage = false
+        header.classList.add('hidden')
+
+        renderMain(null)
+    } else {
+        currentPage++
+        renderHeading()
+        renderMain(null)
+    }
 }
 
-function renderRecommendation() {
+function fetchRecommendation() {
     
 }
 
@@ -230,19 +235,21 @@ function renderMain(recommendation) {
                 </section>
             `
 
-            document
-                .getElementById('movie-interests')
-                .addEventListener('submit', 
-                    currentPage < peopleCount 
-                    ? renderQuestions 
-                    : renderRecommendation
-                )
+            // document
+            //     .getElementById('movie-interests')
+            //     .addEventListener('submit', 
+            //         currentPage < peopleCount 
+            //         ? renderQuestions 
+            //         : renderRecommendation
+            //     )
+            document.getElementById('movie-interests').addEventListener('submit', renderQuestions)
         } else {
+            console.log('Displaying movie recommendation for group:', moviePoll)
             main.innerHTML = `
                 <section id="answers">
                     <div id="movie">
                         <h2 id="title">The Martian (2015)</h2>
-                        <img id="poster" src="${imgUrl}" alt="The Martian Movie Poster">
+                        <img id="poster" src="abc.jpg" alt="The Martian Movie Poster">
                         <p id="description">The inspiring story of an astronaut stranded on Mars who needs to rely on his ingenuity to come back to Earth</p>
                     </div>
                     <button id="startover">Next Movie</button>

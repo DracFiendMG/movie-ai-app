@@ -5,7 +5,7 @@ export default async (req) => {
     
     const apiKey = process.env.TMDB_API_KEY;
     
-    const response = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}`);
+    const response = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}`);
     
     if (!response.ok) {
       const errorText = await response.text();

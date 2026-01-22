@@ -3,7 +3,8 @@ import { getEmbedding, chatCompletions, getMovieImage, supabase } from './config
 let currentPage = 1
 let peopleCount = 1
 let time = '2 Hours'
-let moviePoll = []
+const moviePoll = []
+const recommendationView = []
 
 const view = {
     multiPersonView: true
@@ -52,9 +53,7 @@ async function fetchMovieInterests(e) {
     renderMain(recommendation)
 }
 
-async function fetchMovies(e) {
-    e.preventDefault()
-
+async function fetchMovies() {
     const response = await getMovieImage('The Martian')
     console.log(response.results[0].poster_path)
 
@@ -163,9 +162,9 @@ Respond ONLY in the following JSON format:
     ]
 
     const response = await chatCompletions(messages)
-    const recommendation = JSON.parse(response.suggestion)
-    console.log('Recommendations:', recommendation)
-    return recommendation
+    const recommendations = JSON.parse(response.suggestion)
+    console.log('Recommendations:', recommendations)
+    return recommendations
 }
 
 async function beautifyQuery(query) {
@@ -230,9 +229,10 @@ async function renderQuestions(e) {
 
         let queries = await beautifyQuery(interestsToQuery(moviePoll))
         const data = await findNearestMatches(await createEmbeddings(queries), 3)
-        const recommendation = await getChatCompletionForMultiView(data.join('\n\n'))
-        console.log('Movie recommendation for group:', recommendation)
+        const recommendations = await getChatCompletionForMultiView(data.join('\n\n'))
+        console.log('Movie recommendation for group:', recommendations)
 
+        await fetchMoviePosterAndDesignView(recommendations)
         renderMain(null)
     } else {
         currentPage++
@@ -258,9 +258,42 @@ function interestsToQuery(interests = moviePoll) {
     return query
 }
 
-function fetchRecommendation() {
-    
+async function fetchMoviePosterAndDesignView(recommendations) {
+    const recommendationPromises = recommendations.map(async (recommendation, index) => {
+        const response = await getMovieImage(recommendation.title)
+        const posterPath = response.results[0].poster_path
+
+        const posterUrl = `https://image.tmdb.org/t/p/w500${posterPath}`
+        return `
+            <section id="answers">
+                <div id="movie">
+                    <h2 id="title">${recommendation.title} (${recommendation.year})</h2>
+                    <img id="poster" src="${posterUrl}" alt="${recommendation.title} Movie Poster">
+                    <p id="description">${recommendation.description}</p>
+                </div>
+                ${recommendations.length - 1 === index 
+                    ? `<button id="startover">Start Over</button>` 
+                    : `<button id="next">Next Movie</button>`}
+            </section>
+        `
+    })
+
+    recommendationView.push(await Promise.all(recommendationPromises))
+    renderRecommendation()
 }
+
+function renderRecommendation() {
+    main.innerHTML = recommendationView.shift()
+    if (recommendationView.length > 1) {
+        document.getElementById('next').addEventListener('click', renderRecommendation)
+    } else {
+        document.getElementById('startover').addEventListener('click', () => {
+            state.questionsPage = true
+            renderMain(null)
+        })
+    }
+}
+
 
 function renderHeading() {
     const heading = document.getElementById('heading')
@@ -326,28 +359,8 @@ function renderMain(recommendation) {
                     </form>
                 </section>
             `
-
-            // document
-            //     .getElementById('movie-interests')
-            //     .addEventListener('submit', 
-            //         currentPage < peopleCount 
-            //         ? renderQuestions 
-            //         : renderRecommendation
-            //     )
+            
             document.getElementById('movie-interests').addEventListener('submit', renderQuestions)
-        } else {
-            console.log('Displaying movie recommendation for group:', moviePoll)
-            main.innerHTML = `
-                <section id="answers">
-                    <div id="movie">
-                        <h2 id="title">The Martian (2015)</h2>
-                        <img id="poster" src="abc.jpg" alt="The Martian Movie Poster">
-                        <p id="description">The inspiring story of an astronaut stranded on Mars who needs to rely on his ingenuity to come back to Earth</p>
-                    </div>
-                    <button id="startover">Next Movie</button>
-                </section>
-            `
-            document.getElementById('startover').addEventListener('click', fetchMovies)
         }
     } else {
         if (state.questionsPage) {
@@ -391,5 +404,6 @@ function renderMain(recommendation) {
 }
 
 // createAndStoreEmbeddings()
+fetchMovies()
 renderHeading()
 renderMain(null)

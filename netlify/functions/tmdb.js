@@ -1,11 +1,18 @@
 export default async (req) => {
   try {
+    console.log('TMDB function invoked');
     const url = new URL(req.url);
     const query = url.searchParams.get('query');
     
     const apiKey = process.env.TMDB_API_KEY;
     
-    const response = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}`);
+    const response = await fetch(
+      `https://api.themoviedb.org/4/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}`, {
+        method: 'GET',
+        headers: { 
+          'Content-Type': 'application/json'
+        }
+    });
     
     if (!response.ok) {
       const errorText = await response.text();

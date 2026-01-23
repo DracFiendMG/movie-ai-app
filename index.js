@@ -1,4 +1,10 @@
-import { getEmbedding, chatCompletions, getMovieImage, supabase } from './config.js';
+import { 
+    getEmbedding, 
+    chatCompletions, 
+    getMovieImage, 
+    getOMDBMovieImage, 
+    supabase 
+} from './config.js';
 
 let currentPage = 1
 let peopleCount = 1
@@ -54,8 +60,8 @@ async function fetchMovieInterests(e) {
 }
 
 async function fetchMovies() {
-    const response = await getMovieImage('The Martian')
-    console.log(response.results[0].poster_path)
+    // const response = await getMovieImage('The Martian')
+    // console.log(response.results[0].poster_path)
 
     //TODO: https://image.tmdb.org/t/p/[size]/[poster_path]
 }
@@ -149,7 +155,7 @@ Respond ONLY in the following JSON format:
         "description": "A single short paragraph explaining why this movie is perfect for every person based on their preferences."
     },
     {
-        "title": "Movie Title (Year)",
+        "title": "Movie Title",
         "year": "Year",
         "description": "A single short paragraph explaining why this movie is second choice for every person based on their preferences."
     }
@@ -260,15 +266,15 @@ function interestsToQuery(interests = moviePoll) {
 
 async function fetchMoviePosterAndDesignView(recommendations) {
     const recommendationPromises = recommendations.map(async (recommendation, index) => {
-        const response = await getMovieImage(recommendation.title)
-        const posterPath = response.results[0].poster_path
+        const response = await getOMDBMovieImage(recommendation.title)
+        console.log(response)
+        const posterPath = response.poster
 
-        const posterUrl = `https://image.tmdb.org/t/p/w500${posterPath}`
         return `
             <section id="answers">
                 <div id="movie">
                     <h2 id="title">${recommendation.title} (${recommendation.year})</h2>
-                    <img id="poster" src="${posterUrl}" alt="${recommendation.title} Movie Poster">
+                    <img id="poster" src="${posterPath}" alt="${recommendation.title} Movie Poster">
                     <p id="description">${recommendation.description}</p>
                 </div>
                 ${recommendations.length - 1 === index 
@@ -278,7 +284,9 @@ async function fetchMoviePosterAndDesignView(recommendations) {
         `
     })
 
-    recommendationView.push(await Promise.all(recommendationPromises))
+    const recommendationPromisesResolved = await Promise.all(recommendationPromises)
+
+    recommendationView.push(...recommendationPromisesResolved)
     renderRecommendation()
 }
 

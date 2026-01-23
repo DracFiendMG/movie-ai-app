@@ -61,6 +61,18 @@ export async function getMovieImage(query) {
   return data;
 }
 
+export async function getOMDBMovieImage(query) {
+  const response = await fetch(`/.netlify/functions/omdb?movie=${encodeURIComponent(query)}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!response.ok) {
+    throw new Error(`OMDB API error: ${response.statusText}`);
+  }
+  const data = await response.json();
+  return data;
+}
+
 async function createAndStoreEmbeddings() {
     const movieContentList = movies.map((movie) => movie.content)
     const embeddingResponse = await getEmbedding(movieContentList)
@@ -77,7 +89,7 @@ async function createAndStoreEmbeddings() {
 }
 
 async function splitMovieTextAndStoreEmbeddings() {
-  const document = await fetch('/movies.txt')
+  const document = await fetch('/movies-2.txt')
   const response = await document.text()
 
   const textSplitter = new RecursiveCharacterTextSplitter({
@@ -99,7 +111,7 @@ async function splitMovieTextAndStoreEmbeddings() {
   console.log('Movie text chunks and embeddings stored in Supabase')
 }
 
-// splitMovieTextAndStoreEmbeddings()
+splitMovieTextAndStoreEmbeddings()
 
 /** Supabase config */
 const privateKey = import.meta.env.VITE_SUPABASE_API_KEY;

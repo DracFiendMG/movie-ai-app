@@ -154,10 +154,9 @@ async function getChatCompletionForMultiView(text) {
     const messages = [
         {
             role: 'system',
-            content: `You are an enthusiastic movie expert who loves recommending movies to people. You will be given context about movies and multiple users' preferences. Based on this information, recommend a movie that best matches the group's preferences. If you cannot find a suitable match in the context, say "Sorry, I don't have a recommendation based on your preferences." Do not make up movies that aren't in the context.
-Respond ONLY in the following JSON format:
-[
-    {
+            content: `You are an enthusiastic movie expert who loves recommending movies to people. You will be given context about movies that each person is interested in. Based on this information, recommend a movie that best matches the group's interests. If you cannot find a suitable match in the context, say "Sorry, I don't have a recommendation based on your preferences." Do not make up movies that aren't in the context. The number of recommendations you provide can be less than or equal to the number of people.
+Respond ONLY in the following JSON format (Note: Make sure the JSON format is EXACTLY as shown below):
+    [{
         "title": "Movie Title",
         "year": "Year",
         "description": "A single short paragraph explaining why this movie is perfect for every person based on their preferences."
@@ -166,8 +165,7 @@ Respond ONLY in the following JSON format:
         "title": "Movie Title",
         "year": "Year",
         "description": "A single short paragraph explaining why this movie is second choice for every person based on their preferences."
-    }
-]`
+    }]`
         },
         {
             role: 'user',

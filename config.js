@@ -1,7 +1,48 @@
-import { createClient } from "@supabase/supabase-js";
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters'
 
 import movies from './content.js'
+
+/** Supabase - uses Netlify function to hide API keys */
+export const supabase = {
+  rpc: async (functionName, params) => {
+    const response = await fetch('/.netlify/functions/supabase', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: functionName,
+        params: params
+      })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      return { data: null, error };
+    }
+    
+    const data = await response.json();
+    return { data, error: null };
+  },
+  from: (table) => ({
+    insert: async (data) => {
+      const response = await fetch('/.netlify/functions/supabase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: `insert_${table}`,
+          params: { data }
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        return { data: null, error };
+      }
+      
+      const result = await response.json();
+      return { data: result, error: null };
+    }
+  })
+};
 
 /** Hugging Face - uses Netlify function to hide API key */
 export async function getEmbedding(text) {
@@ -110,10 +151,3 @@ async function splitMovieTextAndStoreEmbeddings() {
   await supabase.from('movies').insert(data)
   console.log('Movie text chunks and embeddings stored in Supabase')
 }
-
-/** Supabase config */
-const privateKey = import.meta.env.SUPABASE_API_KEY;
-if (!privateKey) throw new Error(`Expected env var SUPABASE_API_KEY`);
-const url = import.meta.env.SUPABASE_URL;
-if (!url) throw new Error(`Expected env var SUPABASE_URL`);
-export const supabase = createClient(url, privateKey);

@@ -372,7 +372,7 @@ function renderMain(recommendation) {
                     <form id="movie-interests">
                         <div class="question">
                             <label for="question-one">What’s your favorite movie and why?</label>
-                            <textarea id="question-one" name="question-one" required></textarea>
+                            <textarea id="question-one" name="question-one" placeholder="Eg. Forrest Gump" required></textarea>
                         </div>
                         <div class="question">
                             <p>Are you in the mood for something new or a classic?</p>
@@ -398,7 +398,7 @@ function renderMain(recommendation) {
                         </div>
                         <div class="question">
                             <label for="favorite-actor">Which famous film person would you love to be stranded on an island with and why?</label>
-                            <textarea id="favorite-actor" name="favorite-actor" required></textarea>
+                            <textarea id="favorite-actor" name="favorite-actor" placeholder="Eg. Tom Hanks" required></textarea>
                         </div>
                         <button type="submit">${ currentPage < peopleCount ? 'Next Person' : 'Get Movie' }</button>
                     </form>

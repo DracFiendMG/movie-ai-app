@@ -1,7 +1,6 @@
 import { 
     getEmbedding, 
-    chatCompletions, 
-    getMovieImage, 
+    chatCompletions,
     getOMDBMovieImage, 
     supabase 
 } from './config.js';
@@ -9,6 +8,7 @@ import {
 let currentPage = 1
 let peopleCount = 1
 let time = '2 Hours'
+let loadingInterval = null
 const moviePoll = []
 const recommendationView = []
 
@@ -35,6 +35,19 @@ const multiViewQuestions = [
     'Which famous film person would you love to be stranded on an island with and why?'
 ]
 
+const waitingMessages = [
+    "Analyzing cinematic preferences...",
+    "Consulting the movie oracle...",
+    "Searching the film archives...",
+    "Calculating the perfect movie match...",
+    "Preparing your personalized movie experience...",
+    "Decoding your movie tastes...",
+    "Aligning stars for your movie night...",
+    "Exploring hidden gems in cinema...",
+    "Tuning into your movie vibes...",
+    "Crafting the ultimate movie recommendation..."
+]
+
 const main = document.querySelector('main')
 const header = document.querySelector('header')
 
@@ -52,18 +65,13 @@ async function fetchMovieInterests(e) {
         answers.push(value)
     }
 
+    renderLoading()
     const recommendation = await getRecommendation(query, answers)
+    stopLoading()
 
     movieInterestsForm.reset()
     state.questionsPage = false
     renderMain(recommendation)
-}
-
-async function fetchMovies() {
-    // const response = await getMovieImage('The Martian')
-    // console.log(response.results[0].poster_path)
-
-    //TODO: https://image.tmdb.org/t/p/[size]/[poster_path]
 }
 
 async function getRecommendation(query, answers) {
@@ -217,6 +225,28 @@ function renderMultiPersonViewQuestions(e) {
     renderMain(null)
 }
 
+function renderLoading() {
+    const randomIndex = Math.floor(Math.random() * waitingMessages.length)
+
+    main.innerHTML = `
+        <div id="loading">${waitingMessages[randomIndex]}</div>
+    `
+
+    loadingInterval = setInterval(() => {
+        const newIndex = Math.floor(Math.random() * waitingMessages.length)
+        main.innerHTML = `
+            <div id="loading">${waitingMessages[newIndex]}</div>
+        `
+    }, 3000)
+}
+
+function stopLoading() {
+    if (loadingInterval) {
+        clearInterval(loadingInterval)
+        loadingInterval = null
+    }
+}
+
 async function renderQuestions(e) {
     e.preventDefault()
 
@@ -232,6 +262,8 @@ async function renderQuestions(e) {
         console.log('All participants have submitted their answers:', moviePoll)
         state.multiPersonViewQuestionsPage = false
         header.classList.add('hidden')
+
+        renderLoading()
 
         let queries = await beautifyQuery(interestsToQuery(moviePoll))
         const data = await findNearestMatches(await createEmbeddings(queries), 3)
@@ -287,16 +319,21 @@ async function fetchMoviePosterAndDesignView(recommendations) {
     const recommendationPromisesResolved = await Promise.all(recommendationPromises)
 
     recommendationView.push(...recommendationPromisesResolved)
+    stopLoading()
     renderRecommendation()
 }
 
 function renderRecommendation() {
     main.innerHTML = recommendationView.shift()
-    if (recommendationView.length > 1) {
+    if (recommendationView.length > 0) {
         document.getElementById('next').addEventListener('click', renderRecommendation)
     } else {
         document.getElementById('startover').addEventListener('click', () => {
             state.questionsPage = true
+            state.headingWithTitle = true
+            header.classList.remove('hidden')
+
+            renderHeading()
             renderMain(null)
         })
     }
@@ -322,8 +359,8 @@ function renderMain(recommendation) {
             main.innerHTML = `
                 <section>
                     <form id="survey-form">
-                        <input id="numberOfPeople" type="number" min="1" max="10" step="1" name="numberOfPeople" placeholder="How many people?">
-                        <input id="time" type="text" name="time" placeholder="How much time do you have?">
+                        <input id="numberOfPeople" type="number" min="1" max="10" step="1" name="numberOfPeople" placeholder="How many people?" required>
+                        <input id="time" type="text" name="time" placeholder="How much time do you have?" required>
                         <button type="submit">Start</button>
                     </form>
                 </section>
@@ -335,12 +372,12 @@ function renderMain(recommendation) {
                     <form id="movie-interests">
                         <div class="question">
                             <label for="question-one">What’s your favorite movie and why?</label>
-                            <textarea id="question-one" name="question-one"></textarea>
+                            <textarea id="question-one" name="question-one" required></textarea>
                         </div>
                         <div class="question">
                             <p>Are you in the mood for something new or a classic?</p>
                             <div class="selection">
-                                <input type="radio" id="new" name="mood" value="new">
+                                <input type="radio" id="new" name="mood" value="new" required>
                                 <label for="new">New</label>
                                 <input type="radio" id="classic" name="mood" value="classic">
                                 <label for="classic">Classic</label>
@@ -349,7 +386,7 @@ function renderMain(recommendation) {
                         <div class="question">
                             <p>What are you in the mood for?</p>
                             <div class="selection">
-                                <input type="radio" id="fun" name="mood-type" value="fun">
+                                <input type="radio" id="fun" name="mood-type" value="fun" required>
                                 <label for="fun">Fun</label>
                                 <input type="radio" id="serious" name="mood-type" value="serious">
                                 <label for="serious">Serious</label>
@@ -361,7 +398,7 @@ function renderMain(recommendation) {
                         </div>
                         <div class="question">
                             <label for="favorite-actor">Which famous film person would you love to be stranded on an island with and why?</label>
-                            <textarea id="favorite-actor" name="favorite-actor"></textarea>
+                            <textarea id="favorite-actor" name="favorite-actor" required></textarea>
                         </div>
                         <button type="submit">${ currentPage < peopleCount ? 'Next Person' : 'Get Movie' }</button>
                     </form>
@@ -411,7 +448,5 @@ function renderMain(recommendation) {
     }
 }
 
-// createAndStoreEmbeddings()
-fetchMovies()
 renderHeading()
 renderMain(null)
